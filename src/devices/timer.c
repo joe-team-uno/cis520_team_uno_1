@@ -93,7 +93,7 @@ timer_sleep (int64_t ticks)
 
   ASSERT (intr_get_level () == INTR_ON);
   while (timer_elapsed (start) < ticks) 
-    sema_down(thread_current ()->sema);
+    sema_down(&(thread_current ()->sema));
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
