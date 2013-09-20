@@ -172,6 +172,9 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+  intr_disable ();
+  sema_up(&(thread_current ()->sema));
+  intr_enable ();
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
