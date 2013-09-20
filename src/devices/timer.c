@@ -176,16 +176,18 @@ timer_print_stats (void)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
-  size_t i;
+  struct list_elem *e;
+  struct thread *t;
   ticks++;
-  thread_tick ();
-  struct thread *t = list_entry(list_head(&sleep_list),struct thread, wait_elem);
-  for(i = 0; i < list_size(&sleep_list); i++)
+  thread_tick ();  
+  for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e))
   {  
-    t = list_entry(i,struct thread, wait_elem);
+    t = list_entry(e,struct thread, wait_elem);
     if(t->wakeup > ticks)
     {
+      list_remove(e);
       sema_up(&t->sema);
+      
     }
 
   }
