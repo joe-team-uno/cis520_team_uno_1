@@ -97,7 +97,7 @@ timer_sleep (int64_t ticks)
   t->wakeup = start + ticks;
   if(ticks > 0)
   {
-    list_push_back( &sleep_list,t->wait_elem);
+    list_push_back( &sleep_list,&t->wait_elem);
     sema_down(&t->sema);
   }
 }
