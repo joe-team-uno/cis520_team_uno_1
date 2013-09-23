@@ -20,6 +20,7 @@
 /* Number of timer ticks since OS booted. */
 static int64_t ticks;
 static struct list sleep_list;
+static struct semaphore sleep_list_lock;
 
 /* Number of loops per timer tick.
    Initialized by timer_calibrate(). */
@@ -39,6 +40,7 @@ timer_init (void)
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
   list_init(&sleep_list);
+  sema_init(&sleep_list_lock, 1);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -97,7 +99,11 @@ timer_sleep (int64_t ticks)
   t->wakeup = start + ticks;
   if(ticks > 0)
   {
+	intr_disable ();
+    sema_down(&sleep_list_lock);
     list_push_back( &sleep_list,&t->wait_elem);
+    sema_up(&sleep_list_lock);
+	intr_enable ();
     sema_down(&t->sema);
   }
 }
@@ -186,7 +192,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
     if(ticks >= t->wakeup)
     {
       list_remove(e);
-      sema_up(&t->sema);      
+      sema_up(&t->sema);
     }
 
   }
