@@ -22,22 +22,18 @@ in timer.c
 
 ---- ALGORITHMS ----
 A2:
-In timer sleep first the starting number of ticks is gathered.
-Then we get the current thread. We then set the wakeup time for the current thread.
-If the number of ticks greater than the start time is passed to the function, then the
-thread’s list_elem is added to the sleep list. We then call sema_down so the thread is
-now waiting. The timer interrupt handler checks the threads to see if they need woken up.
-If so they remove the thread’s list_elem from the sleep list and perform a sema_up.
+In timer sleep first the starting number of ticks is gathered. Then we get the current thread. We then set the wakeup time for the current thread. If the number of ticks greater than the start time is passed to the function, then the thread’s list_elem is added to the sleep list. We then call sema_down so the thread is now waiting. The timer interrupt handler checks the threads to see if they need woken up. If so they remove the thread’s list_elem from the sleep list and perform a sema_up.
 
 A3:
-To minimize the the amount of time spent in the timer interrupt only the threads that have
-their list_elem in the sleep_list are checked to see if they need to be woken up.
+To minimize the the amount of time spent in the timer interrupt only the threads that have their list_elem in the sleep_list are checked to see if they need to be woken up.
 
 
 ----- SYNCHRONIZATION ----
 A4:
+To avoid race conditions when multiple threads call timer_sleep() simultaneously, we added a semaphore that locks the sleep_list from begin edited.
 
 A5:
+To avoid race conditions when a timer interrupt occurs during a call to timer sleep we disabled interrupts before we add a thread to the sleep_list.
 
 ---- RATIONALE ----
 A6: We chose this design because it uses the semaphore to block the thread from further execution. This is an easy way to do block execution. This is a better design because it allow other threads to be executed while the sleeping thread is being blocked. 
