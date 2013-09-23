@@ -97,7 +97,9 @@ timer_sleep (int64_t ticks)
   t->wakeup = start + ticks;
   if(ticks > 0)
   {
+	intr_disable ();
     list_push_back( &sleep_list,&t->wait_elem);
+	intr_enable ();
     sema_down(&t->sema);
   }
 }
@@ -185,7 +187,9 @@ timer_interrupt (struct intr_frame *args UNUSED)
     t = list_entry(e,struct thread, wait_elem);
     if(ticks >= t->wakeup)
     {
+      intr_disable ();
       list_remove(e);
+	  intr_enable ();
       sema_up(&t->sema);      
     }
 
