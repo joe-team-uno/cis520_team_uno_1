@@ -183,7 +183,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
   for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e))
   {  
     t = list_entry(e,struct thread, wait_elem);
-    if(ticks > t->wakeup)
+    if(ticks >= t->wakeup)
     {
       list_remove(e);
       sema_up(&t->sema);      
