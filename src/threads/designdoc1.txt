@@ -1,0 +1,43 @@
+CIS 520 - Programming Project #1
+
+
+---- Group ----
+Joseph Janssen <jj441@ksu.edu>
+
+ALARM CLOCK
+===========
+---- DATA STRUCTURES ----
+A1:
+struct thread in thread.h
+//semaphore used to sleep or wakeup the thread
+	struct semaphore sema;
+//wakeup keep tracks of what tick amount should the thread be woken up
+ 	int wakeup;
+//list element is added to a list if the thread is waiting for a wakeup
+	struct list_elem wait_elem;
+
+in timer.c
+//list that keeps track of the threads that are waiting for wakeup
+	static struct list sleep_list;
+
+---- ALGORITHMS ----
+A2:
+In timer sleep first the starting number of ticks is gathered.
+Then we get the current thread. We then set the wakeup time for the current thread.
+If the number of ticks greater than the start time is passed to the function, then the
+thread’s list_elem is added to the sleep list. We then call sema_down so the thread is
+now waiting. The timer interrupt handler checks the threads to see if they need woken up.
+If so they remove the thread’s list_elem from the sleep list and perform a sema_up.
+
+A3:
+To minimize the the amount of time spent in the timer interrupt only the threads that have
+their list_elem in the sleep_list are checked to see if they need to be woken up.
+
+
+----- SYNCHRONIZATION ----
+A4:
+
+A5:
+
+---- RATIONALE ----
+A6: We chose this design because it uses the semaphore to block the thread from further execution. This is an easy way to do block execution. This is a better design because it allow other threads to be executed while the sleeping thread is being blocked. 
