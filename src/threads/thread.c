@@ -353,6 +353,7 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  struct list_elem *e;
   thread_current ()->priority = new_priority;
   for (e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e))
   {
