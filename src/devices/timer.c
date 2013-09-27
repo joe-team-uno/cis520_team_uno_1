@@ -99,11 +99,11 @@ timer_sleep (int64_t ticks)
   t->wakeup = start + ticks;
   if(ticks > 0)
   {
-	intr_disable ();
+    intr_disable ();
     sema_down(&sleep_list_lock);
     list_push_back( &sleep_list,&t->wait_elem);
     sema_up(&sleep_list_lock);
-	intr_enable ();
+    intr_enable ();
     sema_down(&t->sema);
   }
 }

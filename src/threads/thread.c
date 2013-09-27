@@ -211,11 +211,11 @@ thread_create (const char *name, int priority,
   thread_unblock (t);
   
   //if current thread's priority < the new threads priority
-  if(thread_current ()->priority < priority)
+  /*if(thread_current ()->priority < priority)
   {
     //yield the currently running thread
     thread_yield();
-  }
+  }*/
 
   return tid;
 }
@@ -516,8 +516,17 @@ next_thread_to_run (void)
     return idle_thread;
   else
   {
-    //need to find max priority instead of first item in list
-    return list_entry (list_pop_front (&ready_list), struct thread, elem);
+    /*struct list_elem *e = list_begin (&ready_list);
+    struct thread *max_p = list_entry(e, struct thread, elem);
+    for (; e != list_end (&ready_list); e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, allelem);
+      if(t->priority > max_p->priority )
+      {
+        max_p = t;
+      }
+    }*/
+    return list_entry (list_pop_front (&ready_list), struct thread, elem); 
   }
 }
 
