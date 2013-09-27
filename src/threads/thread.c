@@ -210,13 +210,13 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
   
+  msg("current priority = %d new priority = %d", thread_current ()->priority, priority);
   //if current thread's priority < the new threads priority
-  /*if(thread_current ()->priority < priority)
+  if(thread_current ()->priority < priority)
   {
     //yield the currently running thread
     thread_yield();
-  }*/
-
+  }
   return tid;
 }
 
@@ -512,21 +512,24 @@ alloc_frame (struct thread *t, size_t size)
 static struct thread *
 next_thread_to_run (void) 
 {
+  msg("made it to next thread fun");
   if (list_empty (&ready_list))
     return idle_thread;
   else
   {
-    /*struct list_elem *e = list_begin (&ready_list);
+    struct list_elem *e = list_begin (&ready_list);
     struct thread *max_p = list_entry(e, struct thread, elem);
     for (; e != list_end (&ready_list); e = list_next (e))
     {
       struct thread *t = list_entry (e, struct thread, allelem);
+      //msg("Got a thread of priority %d\n", t->priority);
       if(t->priority > max_p->priority )
       {
         max_p = t;
       }
-    }*/
-    return list_entry (list_pop_front (&ready_list), struct thread, elem); 
+    }
+    //msg("Returning max priority = %d\n", max_p->priority);
+    return max_p; 
   }
 }
 
@@ -586,6 +589,7 @@ thread_schedule_tail (struct thread *prev)
 static void
 schedule (void) 
 {
+  msg("called shedule");
   struct thread *cur = running_thread ();
   struct thread *next = next_thread_to_run ();
   struct thread *prev = NULL;
