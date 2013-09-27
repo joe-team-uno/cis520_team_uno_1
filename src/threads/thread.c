@@ -213,8 +213,6 @@ thread_create (const char *name, int priority,
   //if current thread's priority < the new threads priority
   if(thread_current ()->priority < priority)
   {
-    //push the current thread to the front of the ready list
-    list_push_front (&ready_list, &t->elem);
     //yield the currently running thread
     thread_yield();
   }
@@ -517,7 +515,10 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else
+  {
+    //need to find max priority instead of first item in list
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
+  }
 }
 
 /* Completes a thread switch by activating the new thread's page
