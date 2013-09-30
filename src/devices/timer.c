@@ -182,6 +182,7 @@ timer_print_stats (void)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
+  thread_yield_to_higher_priority();
   struct list_elem *e;
   struct thread *t;
   ticks++;
