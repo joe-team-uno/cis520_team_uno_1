@@ -102,6 +102,7 @@ timer_sleep (int64_t ticks)
     intr_disable ();
     sema_down(&sleep_list_lock);
     list_push_back( &sleep_list,&t->wait_elem);
+	list_sort(&sleep_list, thread_lower_priority, NULL);
     sema_up(&sleep_list_lock);
     intr_enable ();
     sema_down(&t->sema);
