@@ -83,6 +83,8 @@ typedef int tid_t;
    blocked state is on a semaphore wait list. */
 struct thread
   {
+    /*list of threads with donated priority
+      thread who we donated to*/
     /* Owned by thread.c. */
     tid_t tid;                          /* Thread identifier. */
     enum thread_status status;          /* Thread state. */
@@ -141,5 +143,8 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+bool thread_lower_priority(const struct list_elem *a_, const struct list_elem *b_, void *aux UNUSED);
+void thread_yield_to_higher_priority(void);
 
 #endif /* threads/thread.h */

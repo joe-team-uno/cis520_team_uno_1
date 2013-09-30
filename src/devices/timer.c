@@ -99,11 +99,12 @@ timer_sleep (int64_t ticks)
   t->wakeup = start + ticks;
   if(ticks > 0)
   {
-	intr_disable ();
+    intr_disable ();
     sema_down(&sleep_list_lock);
     list_push_back( &sleep_list,&t->wait_elem);
+	list_sort(&sleep_list, thread_lower_priority, NULL);
     sema_up(&sleep_list_lock);
-	intr_enable ();
+    intr_enable ();
     sema_down(&t->sema);
   }
 }
@@ -182,6 +183,7 @@ timer_print_stats (void)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
+  thread_yield_to_higher_priority();
   struct list_elem *e;
   struct thread *t;
   ticks++;
