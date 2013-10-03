@@ -353,7 +353,7 @@ thread_set_priority (int new_priority)
 {
   struct list_elem *e;
   thread_current ()->priority = new_priority;
-  for (e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e))
+  for (e = list_begin (&ready_list); e != list_end (&ready_list); e = list_next (e))
   {
     struct thread *t = list_entry (e, struct thread, allelem);
     if(t->priority > new_priority )
