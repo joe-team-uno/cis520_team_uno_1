@@ -210,13 +210,7 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
   
-  //thread_yield_to_higher_priority();
-  //if current thread's priority < the new threads priority
-  if(thread_current ()->priority < priority)
-  {
-    //yield the currently running thread
-    thread_yield();
-  }
+  thread_yield_to_higher_priority();
   return tid;
 }
 
@@ -511,16 +505,6 @@ next_thread_to_run (void)
     return idle_thread;
   else
   {
-    /*struct list_elem *e = list_begin (&ready_list);
-    struct thread *max_p = list_entry(e, struct thread, elem);
-    for (; e != list_end (&ready_list); e = list_next (e))
-    {
-      struct thread *t = list_entry (e, struct thread, allelem);
-      if(t->priority > max_p->priority )
-      {
-        max_p = t;
-      }
-    }*/
     struct list_elem *e = list_max(&ready_list, thread_lower_priority, NULL);
     struct thread *t = list_entry (e, struct thread, elem);
     list_remove(e);
