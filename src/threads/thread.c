@@ -597,8 +597,8 @@ bool thread_lower_priority(const struct list_elem *a_, const struct list_elem *b
 
 bool thread_lower_priority_elem(const struct semaphore_elem *a_, const struct semaphore_elem *b_, void *aux UNUSED)
 {
-  const struct thread *a = list_entry(a_->elem, struct thread, elem);
-  const struct thread *b = list_entry(b_->elem, struct thread, elem);
+  const struct thread *a = list_entry(&a_->elem, struct thread, elem);
+  const struct thread *b = list_entry(&b_->elem, struct thread, elem);
   return a->priority < b-> priority;
 }
 
