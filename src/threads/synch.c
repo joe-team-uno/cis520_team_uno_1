@@ -334,9 +334,20 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   if (!list_empty (&cond->waiters)) 
   {
     //need to find the max priority semaphore elem, remove it and wake it up
+    struct list_elem *e = list_begin(&cond->waiters);
+    struct list_elem *max_elem = e;
+    struct thread *max_p = list_entry(e, struct thread, elem);
+    for (; e != list_end(&cond->waiters); e = list_next(e))
+    {
+      struct thread *t = list_entry(e, struct thread, elem);
+      if(t->priority > max_p->priority)
+      {
+        max_p = t;
+        max_elem = e;
+      }
     
-    sema_up (&list_entry (list_pop_front (&cond->waiters),
-                          struct semaphore_elem, elem)->semaphore);
+    }
+    sema_up (&list_entry (e, struct semaphore_elem, elem)->semaphore);
   }
 }
 
