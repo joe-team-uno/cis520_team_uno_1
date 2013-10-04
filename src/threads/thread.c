@@ -604,8 +604,8 @@ struct semaphore_elem
 
 bool thread_lower_priority_elem(const struct semaphore_elem *a_, const struct semaphore_elem *b_, void *aux UNUSED)
 {
-  struct list_elem *ae = a_->elem;
-  struct list_elem *be = b_->elem;
+  const struct list_elem *ae = a_->elem;
+  const struct list_elem *be = b_->elem;
   const struct thread *a = list_entry(ae, struct thread, elem);
   const struct thread *b = list_entry(be, struct thread, elem);
   return a->priority < b-> priority;
