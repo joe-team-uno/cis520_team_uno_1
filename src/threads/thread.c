@@ -595,22 +595,6 @@ bool thread_lower_priority(const struct list_elem *a_, const struct list_elem *b
   return a->priority < b-> priority;
 }
 
-/* One semaphore in a list. */
-struct semaphore_elem 
-  {
-    struct list_elem elem;              /* List element. */
-    struct semaphore semaphore;         /* This semaphore. */
-  };
-
-bool thread_lower_priority_elem(const struct semaphore_elem *a_, const struct semaphore_elem *b_, void *aux UNUSED)
-{
-  const struct list_elem *ae = a_->elem;
-  const struct list_elem *be = b_->elem;
-  const struct thread *a = list_entry(ae, struct thread, elem);
-  const struct thread *b = list_entry(be, struct thread, elem);
-  return a->priority < b-> priority;
-}
-
 void thread_yield_to_higher_priority(void)
 {
   enum intr_level old_level = intr_disable();
