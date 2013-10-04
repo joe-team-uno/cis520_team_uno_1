@@ -595,6 +595,13 @@ bool thread_lower_priority(const struct list_elem *a_, const struct list_elem *b
   return a->priority < b-> priority;
 }
 
+bool thread_lower_priority_elem(const struct semaphore_elem *a_, const struct semaphore_elem *b_, void *aux UNUSED)
+{
+  const struct thread *a = list_entry(a_->elem, struct thread, elem);
+  const struct thread *b = list_entry(b_->elem, struct thread, elem);
+  return a->priority < b-> priority;
+}
+
 void thread_yield_to_higher_priority(void)
 {
   enum intr_level old_level = intr_disable();
