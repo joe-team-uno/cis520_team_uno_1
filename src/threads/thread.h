@@ -85,6 +85,7 @@ struct thread
   {
     /*list of threads with donated priority
       thread who we donated to*/
+    int original_priority;
     /* Owned by thread.c. */
     tid_t tid;                          /* Thread identifier. */
     enum thread_status status;          /* Thread state. */
