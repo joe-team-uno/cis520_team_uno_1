@@ -323,6 +323,7 @@ cond_wait (struct condition *cond, struct lock *lock)
    An interrupt handler cannot acquire a lock, so it does not
    make sense to try to signal a condition variable within an
    interrupt handler. */
+
 void
 cond_signal (struct condition *cond, struct lock *lock UNUSED) 
 {
@@ -333,7 +334,8 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
 
   if (!list_empty (&cond->waiters)) 
   {
-    //need to find the max priority semaphore elem, remove it and wake it up
+    //need to find the max priority semaphore elem, call sema up on it
+    //struct list_elem *e ;
     /*struct list_elem *e = list_begin(&cond->waiters);
     struct list_elem *max_elem = e;
     struct thread *max_p = list_entry(e, struct thread, elem);
@@ -346,12 +348,12 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
         max_elem = e;
       }
     
-    }
-    list_remove(e);*/
-    //sema_up (&list_entry (e, struct semaphore_elem, elem)->semaphore);
-    sema_up (&list_entry (list_pop_front (&cond->waiters),
-                          struct semaphore_elem, elem)->semaphore);
+    }*/
+    //struct thread *t = list_entry (list_max(&cond->waiters, cond_lower_priority, NULL), struct thread, elem);
+    //sema_up (&list_entry (list_max(&cond->waiters, cond_lower_priority, NULL), struct semaphore_elem, elem)->semaphore);
+    sema_up (&list_entry (list_pop_front (&cond->waiters), struct semaphore_elem, elem)->semaphore);
   }
+  return 0;
 }
 
 /* Wakes up all threads, if any, waiting on COND (protected by
@@ -369,3 +371,5 @@ cond_broadcast (struct condition *cond, struct lock *lock)
   while (!list_empty (&cond->waiters))
     cond_signal (cond, lock);
 }
+
+
