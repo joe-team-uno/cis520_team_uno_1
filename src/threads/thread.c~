@@ -249,6 +249,7 @@ thread_unblock (struct thread *t)
   ASSERT (t->status == THREAD_BLOCKED);
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
+  thread_yield_to_higher_priority();
   intr_set_level (old_level);
 }
 
@@ -345,6 +346,7 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  thread_current ()->original_priority = new_priority;
   thread_current ()->priority = new_priority;
   struct thread *max_p = list_entry (list_max(&ready_list, thread_lower_priority, NULL), struct thread, allelem);
   if(new_priority >= max_p->priority)
