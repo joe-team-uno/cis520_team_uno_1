@@ -224,6 +224,12 @@ lock_acquire (struct lock *lock)
     if(curThread->priority > lock->holder->priority)
     {
       lock->holder->priority = curThread->priority;
+      curThread->donated_to = lock->holder;
+      if(lock->holder->donated_to != NULL && lock->holder->donated_to->priority < curThread->priority)
+      {
+        //raise priority of low thread to high threads priority
+        lock->holder->donated_to->priority = curThread->priority;
+      }
     }
   }
   

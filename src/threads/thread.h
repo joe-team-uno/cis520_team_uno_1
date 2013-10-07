@@ -100,7 +100,8 @@ struct thread
     struct list_elem wait_elem;
     //locks heald by thread.
     struct lock * locks_held[PRIORITY_DONATION_DEPTH];
-
+    
+    struct thread *donated_to;
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 

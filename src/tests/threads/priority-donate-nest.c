@@ -64,7 +64,7 @@ static void
 medium_thread_func (void *locks_) 
 {
   struct locks *locks = locks_;
-
+  msg("start med");
   lock_acquire (locks->b);
   lock_acquire (locks->a);
 
@@ -86,7 +86,7 @@ static void
 high_thread_func (void *lock_) 
 {
   struct lock *lock = lock_;
-
+  msg("start high");
   lock_acquire (lock);
   msg ("High thread got the lock.");
   lock_release (lock);

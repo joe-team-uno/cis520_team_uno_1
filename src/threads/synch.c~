@@ -213,9 +213,10 @@ lock_acquire (struct lock *lock)
     //Another thread is waiting on a lock. Register it in the list of threads waiting on this lock.
     for(; i < PRIORITY_DONATION_DEPTH; i++)
     {
-      if(lock->threadsWaiting[i] != NULL)
+      if(lock->threadsWaiting[i] == NULL)
       {
         lock->threadsWaiting[i] = curThread;
+        curThread->waiting_on_another_lock = true;
         break;
       }
     }
@@ -224,6 +225,11 @@ lock_acquire (struct lock *lock)
     if(curThread->priority > lock->holder->priority)
     {
       lock->holder->priority = curThread->priority;
+      curThread->donated_to = lock->holder;
+      if(lock->holder->waiting_on_another_lock)
+      {
+        //raise priority of low thread to high threads priority
+      }
     }
   }
   
