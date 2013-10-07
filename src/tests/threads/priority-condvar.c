@@ -17,7 +17,6 @@ void
 test_priority_condvar (void) 
 {
   int i;
-  int k;
   /* This test does not work with the MLFQS. */
   ASSERT (!thread_mlfqs);
 
@@ -38,7 +37,6 @@ test_priority_condvar (void)
       lock_acquire (&lock);
       msg ("Signaling...");
       cond_signal (&condition, &lock);
-      msg( "%d\n",k);
       lock_release (&lock);
     }
 }
