@@ -184,7 +184,7 @@ lock_init (struct lock *lock)
   ASSERT (lock != NULL);
 
   lock->holder = NULL;
-  for(; i < 8; i++)
+  for(; i < PRIORITY_DONATION_DEPTH; i++)
   {
     lock->threadsWaiting[i] = NULL;
   }
@@ -211,7 +211,7 @@ lock_acquire (struct lock *lock)
   if(lock->holder != NULL)
   {
     //Another thread is waiting on a lock. Register it in the list of threads waiting on this lock.
-    for(; i < 8; i++)
+    for(; i < PRIORITY_DONATION_DEPTH; i++)
     {
       if(lock->threadsWaiting[i] != NULL)
       {
@@ -226,8 +226,17 @@ lock_acquire (struct lock *lock)
       lock->holder->priority = curThread->priority;
     }
   }
-
+  
   sema_down (&lock->semaphore);
+  //add_lock_to_thread(lock, curThread);
+  for( i = 0; i < PRIORITY_DONATION_DEPTH; i++)
+  {
+    if(curThread->locks_held[i] == NULL)
+    {
+       curThread->locks_held[i] = lock;
+       break;
+    }
+  }
   lock->holder = curThread;
 }
 
@@ -256,40 +265,94 @@ lock_try_acquire (struct lock *lock)
    An interrupt handler cannot acquire a lock, so it does not
    make sense to try to release a lock within an interrupt
    handler. */
-void
-lock_release (struct lock *lock) 
+void lock_release (struct lock *lock) 
 {
+  int i;
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-  int i = 0;
-  int maxPriority = -1;
   struct thread * curThread = thread_current();
 
-  //Check to see if this thread got a donated priority, if yes then reset our priority
-  if(curThread->priority != curThread->original_priority)
+  //Checks if curThread was still in the waitlist for the lock and removes it if it was.
+  for(i = 0; i < PRIORITY_DONATION_DEPTH; i++)
   {
-    //We are going to reduce our priority. Nuke the highest priority element from the list.
-    for(; i < 8; i++)
+    if(lock->threadsWaiting[i] == curThread)
     {
-      if(lock->threadsWaiting[i] != NULL && lock->threadsWaiting[i]->priority == curThread->priority)
-      {
-        lock->threadsWaiting[i] = NULL;
-        break;
-      }
+      lock->threadsWaiting[i] = NULL;
     }
-
-    //Our priority should now be set to the highest priority that remains in the list.
-    for(; i < 8; i++)
-    {
-      if(lock->threadsWaiting[i] != NULL && lock->threadsWaiting[i]->priority > maxPriority)
-      {
-        maxPriority = lock->threadsWaiting[i]->priority;
-      }
-    }
-    curThread->priority = maxPriority;
   }
+
+  //removes the lock from the current thread.
+  //remove_lock_from_thread(lock, curThread);
+  for( i = 0; i < PRIORITY_DONATION_DEPTH; i++)
+  {
+    if(thread_current()->locks_held[i] == lock)
+       thread_current()->locks_held[i] = NULL;
+  }
+
   lock->holder = NULL;
+  //Check to see if this thread got a donated priority, if yes then reset our priority
+  if(thread_current()->priority != thread_current()->original_priority)
+  {
+    thread_current()->priority = find_priority_for_thread(thread_current());
+  }
   sema_up (&lock->semaphore);
+}
+
+/*Function to find the next priority based on the lock.*/
+
+int find_priority_for_thread(struct thread * thread)
+{
+  ASSERT (thread != NULL);
+  int i, j;
+  int maxPriority = -1;
+
+  //Check to see if this thread got a donated priority, if yes then reset our priority
+  //if(thread->priority != thread->original_priority)
+  //{
+    for( i = 0; i < PRIORITY_DONATION_DEPTH; i++)
+    {
+      for( j = 0; j < PRIORITY_DONATION_DEPTH; j++)
+      {
+        if((thread->locks_held[i] != NULL) && (thread->locks_held[i]->threadsWaiting[j] != NULL) && ((thread->locks_held[i]->threadsWaiting[j]->priority) > maxPriority))
+          maxPriority = thread->locks_held[i]->threadsWaiting[j]->priority;
+      }
+    }
+    
+    return maxPriority;
+  //}
+
+  return thread->original_priority;
+}
+
+/*Adds the lock provided to the thread provided.*/
+void add_lock_to_thread(struct lock * lock, struct thread * thread)
+{
+  ASSERT(lock != NULL);
+  ASSERT(thread != NULL);
+
+  int i;
+  for( i = 0; i < PRIORITY_DONATION_DEPTH; i++)
+  {
+    if(thread->locks_held[i] == NULL)
+    {
+       thread->locks_held[i] = lock;
+       break;
+    }
+  }
+}
+
+/*Removes the lock provided from the thread provided.*/
+void remove_lock_from_thread(struct lock * lock, struct thread * thread)
+{
+  ASSERT(lock != NULL);
+  ASSERT(thread != NULL);
+
+  int i;
+  for( i = 0; i < PRIORITY_DONATION_DEPTH; i++)
+  {
+    if(thread->locks_held[i] == lock)
+       thread->locks_held[i] = NULL;
+  }
 }
 
 /* Returns true if the current thread holds LOCK, false

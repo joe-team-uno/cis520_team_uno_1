@@ -92,7 +92,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
-
+  
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
   init_thread (initial_thread, "main", PRI_DEFAULT);
@@ -474,7 +474,7 @@ init_thread (struct thread *t, const char *name, int priority)
   ASSERT (t != NULL);
   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
   ASSERT (name != NULL);
-
+  int i;
   memset (t, 0, sizeof *t);
   t->status = THREAD_BLOCKED;
   strlcpy (t->name, name, sizeof t->name);
@@ -482,6 +482,13 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->original_priority = priority;
   t->magic = THREAD_MAGIC;
+
+  //loops to initialize thread to hold no locks.
+  for( i = 0; i < PRIORITY_DONATION_DEPTH; i++)
+  {
+    t->locks_held[i] = NULL;
+  }
+
   list_push_back (&all_list, &t->allelem);
   sema_init(&t->sema, 0);
 }

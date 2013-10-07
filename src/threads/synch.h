@@ -4,6 +4,9 @@
 #include <list.h>
 #include <stdbool.h>
 
+//used in threads and sync
+#define PRIORITY_DONATION_DEPTH 8 
+
 /* A counting semaphore. */
 struct semaphore 
   {
@@ -21,7 +24,7 @@ void sema_self_test (void);
 struct lock 
   {
     struct thread *holder;           /* Thread holding lock (for debugging). */
-    struct thread *threadsWaiting[8]; /* A list of threads that need access to the locked resource. Used to calculate donated priorities */
+    struct thread *threadsWaiting[PRIORITY_DONATION_DEPTH]; /* A list of threads that need access to the locked resource. Used to calculate donated priorities */
     struct semaphore semaphore;      /* Binary semaphore controlling access. */
   };
 
@@ -30,6 +33,9 @@ void lock_acquire (struct lock *);
 bool lock_try_acquire (struct lock *);
 void lock_release (struct lock *);
 bool lock_held_by_current_thread (const struct lock *);
+int find_priority_for_thread(struct thread * thread);
+void add_lock_to_thread(struct lock * lock, struct thread * thread);
+void remove_lock_from_thread(struct lock * lock, struct thread * thread);
 
 /* Condition variable. */
 struct condition 
@@ -42,6 +48,7 @@ void cond_init (struct condition *);
 void cond_wait (struct condition *, struct lock *);
 void cond_signal (struct condition *, struct lock *);
 void cond_broadcast (struct condition *, struct lock *);
+bool cond_priority(const struct list_elem *ae, const struct list_elem *be, void *);
 
 /* Optimization barrier.
 
