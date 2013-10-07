@@ -64,7 +64,7 @@ sema_down (struct semaphore *sema)
 
   ASSERT (sema != NULL);
   ASSERT (!intr_context ());
-
+  
   old_level = intr_disable ();
   while (sema->value == 0) 
     {
@@ -115,10 +115,13 @@ sema_up (struct semaphore *sema)
   old_level = intr_disable ();
   if (!list_empty (&sema->waiters))
   { 
-    
-    thread_unblock (list_entry (list_max(&sema->waiters, thread_lower_priority, NULL), struct thread, elem);
+    struct list_elem *e = list_max(&sema->waiters, thread_lower_priority, NULL);    
+    struct thread *t = list_entry (e, struct thread, elem);
+    list_remove(e);
+    thread_unblock (t);
   }
   sema->value++;
+  thread_yield_to_higher_priority();
   intr_set_level (old_level);
 }
 
@@ -197,8 +200,18 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
+  
+  /*if(thread_current ()->priority > lock->holder->priority)
+  {
+    lock->holder->priority = thread_current ()->priority;
+  }*/
 
   sema_down (&lock->semaphore);
+
+  if(thread_current()->priority != thread_current()->original_priority)
+  {
+    thread_current()->priority = thread_current()->original_priority;
+  }
   lock->holder = thread_current ();
 }
 
@@ -310,6 +323,7 @@ cond_wait (struct condition *cond, struct lock *lock)
    An interrupt handler cannot acquire a lock, so it does not
    make sense to try to signal a condition variable within an
    interrupt handler. */
+
 void
 cond_signal (struct condition *cond, struct lock *lock UNUSED) 
 {
@@ -319,8 +333,27 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (lock_held_by_current_thread (lock));
 
   if (!list_empty (&cond->waiters)) 
-    sema_up (&list_entry (list_pop_front (&cond->waiters),
-                          struct semaphore_elem, elem)->semaphore);
+  {
+    //need to find the max priority semaphore elem, call sema up on it
+    //struct list_elem *e ;
+    /*struct list_elem *e = list_begin(&cond->waiters);
+    struct list_elem *max_elem = e;
+    struct thread *max_p = list_entry(e, struct thread, elem);
+    for (; e != list_end(&cond->waiters); e = list_next(e))
+    {
+      struct thread *t = list_entry(e, struct thread, elem);
+      if(t->priority > max_p->priority)
+      {
+        max_p = t;
+        max_elem = e;
+      }
+    
+    }*/
+    //struct thread *t = list_entry (list_max(&cond->waiters, cond_lower_priority, NULL), struct thread, elem);
+    //sema_up (&list_entry (list_max(&cond->waiters, cond_lower_priority, NULL), struct semaphore_elem, elem)->semaphore);
+    sema_up (&list_entry (list_pop_front (&cond->waiters), struct semaphore_elem, elem)->semaphore);
+  }
+  return 0;
 }
 
 /* Wakes up all threads, if any, waiting on COND (protected by
@@ -338,3 +371,5 @@ cond_broadcast (struct condition *cond, struct lock *lock)
   while (!list_empty (&cond->waiters))
     cond_signal (cond, lock);
 }
+
+

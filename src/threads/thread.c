@@ -211,12 +211,6 @@ thread_create (const char *name, int priority,
   thread_unblock (t);
   
   thread_yield_to_higher_priority();
-  //if current thread's priority < the new threads priority
-  /*if(thread_current ()->priority < priority)
-  {
-    //yield the currently running thread
-    thread_yield();
-  }*/
   return tid;
 }
 
@@ -351,16 +345,12 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  struct list_elem *e;
+  thread_current ()->original_priority = new_priority;
   thread_current ()->priority = new_priority;
-  for (e = list_begin (&ready_list); e != list_end (&ready_list); e = list_next (e))
+  struct thread *max_p = list_entry (list_max(&ready_list, thread_lower_priority, NULL), struct thread, allelem);
+  if(new_priority >= max_p->priority)
   {
-    struct thread *t = list_entry (e, struct thread, allelem);
-    if(t->priority > new_priority )
-    {
-      thread_yield();
-      return;
-    }
+    thread_yield();
   }
 }
 
@@ -368,7 +358,10 @@ thread_set_priority (int new_priority)
 int
 thread_get_priority (void) 
 {
-  return thread_current ()->priority;
+  if(thread_current ()->priority > thread_current ()->original_priority)
+     return thread_current ()->priority;
+  else
+     return thread_current()->original_priority;
 }
 
 /* Sets the current thread's nice value to NICE. */
@@ -486,6 +479,7 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
+  t->original_priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
   sema_init(&t->sema, 0);
@@ -516,18 +510,10 @@ next_thread_to_run (void)
     return idle_thread;
   else
   {
-    /*struct list_elem *e = list_begin (&ready_list);
-    struct thread *max_p = list_entry(e, struct thread, elem);
-    for (; e != list_end (&ready_list); e = list_next (e))
-    {
-      struct thread *t = list_entry (e, struct thread, allelem);
-      if(t->priority > max_p->priority )
-      {
-        max_p = t;
-      }
-    }*/
-    
-    return list_entry (list_max(&ready_list, thread_lower_priority, NULL), struct thread, elem);
+    struct list_elem *e = list_max(&ready_list, thread_lower_priority, NULL);
+    struct thread *t = list_entry (e, struct thread, elem);
+    list_remove(e);
+    return t;
     //return list_entry (list_pop_front (&ready_list), struct thread, elem); 
     //return max_p; 
   }
