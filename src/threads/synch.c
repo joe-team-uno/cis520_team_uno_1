@@ -213,7 +213,7 @@ lock_acquire (struct lock *lock)
     //Another thread is waiting on a lock. Register it in the list of threads waiting on this lock.
     for(; i < PRIORITY_DONATION_DEPTH; i++)
     {
-      if(lock->threadsWaiting[i] != NULL)
+      if(lock->threadsWaiting[i] == NULL)
       {
         lock->threadsWaiting[i] = curThread;
         break;
