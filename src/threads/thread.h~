@@ -25,6 +25,8 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
+//defined in sync.h also
+#define PRIORITY_DONATION_DEPTH 8
 /* A kernel thread or user process.
 
    Each thread structure is stored in its own 4 kB page.  The
@@ -96,7 +98,10 @@ struct thread
     struct semaphore sema;
     int wakeup;
     struct list_elem wait_elem;
-
+    //locks heald by thread.
+    struct lock * locks_held[PRIORITY_DONATION_DEPTH];
+    bool waiting_on_another_lock;
+    struct thread *donated_to;
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
@@ -108,6 +113,8 @@ struct thread
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
+
+
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
@@ -146,7 +153,6 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 bool thread_lower_priority(const struct list_elem *a_, const struct list_elem *b_, void *aux UNUSED);
-bool thread_lower_priority_elem(const struct semaphore_elem *a_, const struct semaphore_elem *b_, void *aux UNUSED);
 void thread_yield_to_higher_priority(void);
 
 #endif /* threads/thread.h */
