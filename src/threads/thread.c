@@ -347,7 +347,10 @@ void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->original_priority = new_priority;
+  if(thread_current ()->has_donated_priority == false)
+  {
   thread_current ()->priority = new_priority;
+  }
   struct thread *max_p = list_entry (list_max(&ready_list, thread_lower_priority, NULL), struct thread, allelem);
   if(new_priority >= max_p->priority)
   {
@@ -482,7 +485,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->original_priority = priority;
   t->magic = THREAD_MAGIC;
-  
+  t->has_donated_priority = false;
   t->donated_to = NULL;
   //loops to initialize thread to hold no locks.
   for( i = 0; i < PRIORITY_DONATION_DEPTH; i++)

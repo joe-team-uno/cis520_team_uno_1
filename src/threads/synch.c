@@ -225,6 +225,7 @@ lock_acquire (struct lock *lock)
     if(curThread->priority > lock->holder->priority)
     {
       lock->holder->priority = curThread->priority;
+      lock->holder->has_donated_priority = true;
       curThread->donated_to = lock->holder;
       extra = lock->holder->donated_to;
       while(extra != NULL && extra->priority < curThread->priority)
@@ -303,6 +304,10 @@ void lock_release (struct lock *lock)
   if(thread_current()->priority != thread_current()->original_priority)
   {
     thread_current()->priority = find_priority_for_thread(thread_current());
+    if(thread_current()->priority == thread_current()->original_priority)
+    {
+       thread_current()->has_donated_priority = false;
+    }
   }
   sema_up (&lock->semaphore);
 }
