@@ -3,6 +3,8 @@ CIS 520 - Programming Project #1
 
 ---- Group ----
 Joseph Janssen <jj441@ksu.edu>
+Daniel Moore   <dmoore@ksu.edu>
+
 
 ALARM CLOCK
 ===========
@@ -22,7 +24,7 @@ in timer.c
 
 ---- ALGORITHMS ----
 A2:
-In timer sleep first the starting number of ticks is gathered. Then we get the current thread. We then set the wakeup time for the current thread. If the number of ticks greater than the start time is passed to the function, then the thread’s list_elem is added to the sleep list. We then call sema_down so the thread is now waiting. The timer interrupt handler checks the threads to see if they need woken up. If so they remove the thread’s list_elem from the sleep list and perform a sema_up.
+In timer sleep first the starting number of ticks is gathered. Then we get the current thread. We then set the wakeup time for the current thread. If the number of ticks greater than the start time is passed to the function, then the thread's list_elem is added to the sleep list. We then call sema_down so the thread is now waiting. The timer interrupt handler checks the threads to see if they need woken up. If so they remove the thread's list_elem from the sleep list and perform a sema_up.
 
 A3:
 To minimize the the amount of time spent in the timer interrupt only the threads that have their list_elem in the sleep_list are checked to see if they need to be woken up.
@@ -37,3 +39,54 @@ To avoid race conditions when a timer interrupt occurs during a call to timer sl
 
 ---- RATIONALE ----
 A6: We chose this design because it uses the semaphore to block the thread from further execution. This is an easy way to do block execution. This is a better design because it allow other threads to be executed while the sleeping thread is being blocked. 
+
+             PRIORITY SCHEDULING
+             ===================
+
+---- DATA STRUCTURES ----
+
+B1:
+in thread.h
+//Tracks the original priority of the thread. This allows us to separately track donated priorities.
+    int original_priority;
+//Each thread should keep track of locks that it holds. This allows calculate donated priorities.
+    struct lock * locks_held[PRIORITY_DONATION_DEPTH];
+//True if this thread has a donated priority.
+    bool has_donated_priority;
+//Whenever we donate our priority, track the thread we donated to.
+    struct thread *donated_to;
+
+in sync.h
+//Used to calculate donated priorities. Each lock tracks the threads that are waiting for it.
+    struct thread *threadsWaiting[PRIORITY_DONATION_DEPTH];
+
+B2: We use arrays to keep track of all threads waiting for a lock, as well as the locks that each thread holds.
+This allows us to search through these arrays when calculating the priority of a thread (we always pick the maximum priority).
+
+
+---- ALGORITHMS ----
+
+B3: Pintos keeps a list of all threads that are ready to run. We can apply list_max() to search through this list and find the element with the highest priority. 
+
+B4: First we check to see if the lock already has a holder. If so we add the thread that called lock aquire to the lock's list that contains the waiting threads.
+We then check to see if the holder's priority is less than the caller's priority. If so we donate the caller's priority to the holder's priority. If the holder has any threads
+that it donated its priority to, then it continuously donates it's priority to the thread it donated to until there isn't a thread it donated to.
+then it peforms a sema-down on the lock. Once it passes this the current thread gets set to the lock holder.
+
+B5: First we remove the current thread from the lock's list that contains the waiting threads. We then remove the lock from the threads list of locks held. We then reset the current threads priority to
+the apporiate value. Then a sema_up is performed. The sema_up then chooses the max thread to run.
+
+---- SYNCHRONIZATION ----
+
+B6: Say we have a low-priority thread A which holds a lock, and high priority thread B which is waiting for A to release its lock.
+A potential race may occur if:
+1) Thread_set_priority is used on thread A
+2) B is trying to donate its priority to thread A
+Then if operation (2) completes first, we may set the priority of A, but then (1) may immediately overrwrite this.
+
+We solve this problem with a boolean that tracks if A has a donated priority or not. If A has ever received a donated priority, we should prevent thread_set_priority from overrwriting the thread's current priority (though we do want to update the thread's original priority).
+
+---- RATIONALE ----
+
+B7: This design works well because we save a lot of information about each thread and each lock. Carefully tracking these gives us the ability to re-calculate the priority of a thread at any time, based on the current conditions of the system. Initially, threads and locks were not carefully tracked, and so we could only set the priority of a thread based on its current priority and the donor priority. Such a solution caused problems with multi-level inheritance, as we sometimes need to lower a thread's priority to something other than its original.
+
