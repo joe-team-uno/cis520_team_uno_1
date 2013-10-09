@@ -207,6 +207,7 @@ lock_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
   int i = 0;
   struct thread * curThread = thread_current();
+  struct thread *extra = NULL;
 
   if(lock->holder != NULL)
   {
@@ -224,11 +225,14 @@ lock_acquire (struct lock *lock)
     if(curThread->priority > lock->holder->priority)
     {
       lock->holder->priority = curThread->priority;
+      lock->holder->has_donated_priority = true;
       curThread->donated_to = lock->holder;
-      if(lock->holder->donated_to != NULL && lock->holder->donated_to->priority < curThread->priority)
+      extra = lock->holder->donated_to;
+      while(extra != NULL && extra->priority < curThread->priority)
       {
         //raise priority of low thread to high threads priority
-        lock->holder->donated_to->priority = curThread->priority;
+        extra ->priority = curThread->priority;
+        extra = extra->donated_to;
       }
     }
   }
@@ -300,6 +304,10 @@ void lock_release (struct lock *lock)
   if(thread_current()->priority != thread_current()->original_priority)
   {
     thread_current()->priority = find_priority_for_thread(thread_current());
+    if(thread_current()->priority == thread_current()->original_priority)
+    {
+       thread_current()->has_donated_priority = false;
+    }
   }
   sema_up (&lock->semaphore);
 }
@@ -310,7 +318,7 @@ int find_priority_for_thread(struct thread * thread)
 {
   ASSERT (thread != NULL);
   int i, j;
-  int maxPriority = -1;
+  int maxPriority = thread->original_priority;
 
   //Check to see if this thread got a donated priority, if yes then reset our priority
   //if(thread->priority != thread->original_priority)
