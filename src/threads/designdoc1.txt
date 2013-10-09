@@ -2,8 +2,9 @@ CIS 520 - Programming Project #1
 
 
 ---- Group ----
-Joseph Janssen <jj441@ksu.edu>
-Daniel Moore   <dmoore@ksu.edu>
+Joseph Janssen      <jj441@ksu.edu>
+Daniel Moore           <dmoore@ksu.edu>
+Jed Oesterreich      <jedediah@ksu.edu>
 
 
 ALARM CLOCK
